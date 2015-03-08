@@ -1,4 +1,5 @@
 <?php
+
 /*
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -21,39 +22,21 @@ namespace NoDbModule;
 use Zend\ModuleManager\Feature\ConfigProviderInterface;
 use Zend\ModuleManager\Feature\BootstrapListenerInterface;
 use Zend\EventManager\EventInterface;
-use Zend\Mvc\MvcEvent;
 
 class Module implements ConfigProviderInterface, BootstrapListenerInterface
 {
 
     public function onBootstrap(EventInterface $e)
     {
-        $app = $e->getApplication();
+        /* @var $eventManager \Zend\EventManager\EventManager */
+        $app          = $e->getApplication();
+        $sm           = $app->getServiceManager();
         $eventManager = $app->getEventManager();
 
-        $eventManager->attach('*', array($this, 'dbInstanceError'), 10000);
-    }
+        /* @var $config Configuration */
+        $config = $sm->get('NoDbModule\Configuration');
 
-    public function dbInstanceError(MvcEvent $e)
-    {
-        $application = $e->getTarget();
-        $sm = $application->getServiceManager();
-
-        //try to connect, and if not connected, then catch...
-        try {
-            /* @var $entityManager \Doctrine\ORM\EntityManager */
-            $entityManager = $application->getServiceManager()
-                ->get('Doctrine\ORM\EntityManager');
-
-            $entityManager->getConnection()->connect();
-        } catch (\Exception $e) {
-            $viewModel = new \Zend\View\Model\ViewModel();
-            $viewModel->setTemplate('error/dberror');
-
-            echo $sm->get('ViewRenderer')->render($viewModel);
-            //@todo LOG ERROR
-            $e->stopPropagation();
-        }
+        $eventManager->attach($sm->get($config->getResolver()));
     }
 
     /**

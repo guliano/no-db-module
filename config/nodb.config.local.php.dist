@@ -1,0 +1,8 @@
+<?php
+
+return [
+    'nodb_module' => [
+        'resolver' => 'NoDbModule\Resolver\DoctrineResolver',
+        'error_template' => 'error/dberrors',
+    ];
+];
